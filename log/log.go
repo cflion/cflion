@@ -91,6 +91,11 @@ func SetLevel(level string) {
 	defaultLogger.level = getLevel(level)
 }
 
+// SetOutput sets the writer of the default logger.
+func SetOutput(w io.Writer)  {
+    defaultLogger.logger.SetOutput(w)
+}
+
 // Trace prints trace level message of the default logger.
 func Trace(v ...interface{}) {
 	defaultLogger.Trace(v...)
