@@ -1,4 +1,4 @@
-./vendor
+vendor/
 ./build
 *.dat
 .idea/

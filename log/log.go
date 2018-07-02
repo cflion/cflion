@@ -1,4 +1,4 @@
-//  Copyright (c) 2018, cflion
+//  Copyright (c) 2018 The cflion Authors
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -50,18 +50,40 @@ const (
 )
 
 // defaultLogger prints message to the stdout.
-var defaultLogger = NewLogger(os.Stdout)
+var defaultLogger = &Logger{
+	level: INFO,
+	trace: golog.New(os.Stdout, "[TRACE] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+	debug: golog.New(os.Stdout, "[DEBUG] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+	info:  golog.New(os.Stdout, "[INFO] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+	warn:  golog.New(os.Stdout, "[WARN] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+	error: golog.New(os.Stdout, "[ERROR] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+	depth: 3,
+}
 
 // Logger represents a simple defaultLogger with level.
 // The inline logger is the standard Go logging "log".
 type Logger struct {
-	level  int
-	logger *golog.Logger
+	level int
+	trace *golog.Logger
+	debug *golog.Logger
+	info  *golog.Logger
+	warn  *golog.Logger
+	error *golog.Logger
+	// logger *golog.Logger
+	depth int
 }
 
 // NewLogger creates a logger.
 func NewLogger(out io.Writer) *Logger {
-	logger := &Logger{level: INFO, logger: golog.New(out, "", golog.Ldate|golog.Ltime|golog.Lshortfile)}
+	logger := &Logger{
+		level: INFO,
+		trace: golog.New(out, "[TRACE] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+		debug: golog.New(out, "[DEBUG] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+		info:  golog.New(out, "[INFO] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+		warn:  golog.New(out, "[WARN] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+		error: golog.New(out, "[ERROR] ", golog.Ldate|golog.Ltime|golog.Lshortfile),
+		depth: 2,
+	}
 	return logger
 }
 
@@ -88,67 +110,21 @@ func getLevel(level string) int {
 
 // SetLevel sets the logging level of the default logger.
 func SetLevel(level string) {
-	defaultLogger.level = getLevel(level)
-}
-
-// SetOutput sets the writer of the default logger.
-func SetOutput(w io.Writer)  {
-    defaultLogger.logger.SetOutput(w)
-}
-
-// Trace prints trace level message of the default logger.
-func Trace(v ...interface{}) {
-	defaultLogger.Trace(v...)
-}
-
-// Tracef prints trace level message of the default logger with format.
-func Tracef(format string, v ...interface{}) {
-	defaultLogger.Tracef(format, v...)
-}
-
-// Debug prints debug level message of the default logger.
-func Debug(v ...interface{}) {
-	defaultLogger.Debug(v...)
-}
-
-// Debugf prints debug level message of the default logger with format.
-func Debugf(format string, v ...interface{}) {
-	defaultLogger.Debugf(format, v...)
-}
-
-// Info prints info level message of the default logger.
-func Info(v ...interface{}) {
-	defaultLogger.Info(v...)
-}
-
-// Infof prints info level message of the default logger with format.
-func Infof(format string, v ...interface{}) {
-	defaultLogger.Infof(format, v...)
-}
-
-// Warn prints warn level message of the default logger.
-func Warn(v ...interface{}) {
-	defaultLogger.Warn(v...)
-}
-
-// Warnf prints warn level message of the default logger with format.
-func Warnf(format string, v ...interface{}) {
-	defaultLogger.Warnf(format, v...)
-}
-
-// Error prints error level message of the default logger.
-func Error(v ...interface{}) {
-	defaultLogger.Error(v...)
-}
-
-// Errorf prints error level message of the default logger withe format.
-func Errorf(format string, v ...interface{}) {
-	defaultLogger.Errorf(format, v...)
+	defaultLogger.SetLevel(level)
 }
 
 // SetLevel sets the logging level of a logger.
 func (l *Logger) SetLevel(level string) {
 	l.level = getLevel(level)
+}
+
+// SetOutput sets the writer of the default logger.
+func SetOutput(w io.Writer) {
+	defaultLogger.trace.SetOutput(w)
+	defaultLogger.debug.SetOutput(w)
+	defaultLogger.info.SetOutput(w)
+	defaultLogger.warn.SetOutput(w)
+	defaultLogger.error.SetOutput(w)
 }
 
 // IsTraceEnabled determines whether the trace level is enabled.
@@ -176,13 +152,22 @@ func (l *Logger) IsErrorEnabled() bool {
 	return l.level <= ERROR
 }
 
+// Trace prints trace level message of the default logger.
+func Trace(v ...interface{}) {
+	defaultLogger.Trace(v...)
+}
+
 // TRACE prints trace level message.
 func (l *Logger) Trace(v ...interface{}) {
 	if !l.IsTraceEnabled() {
 		return
 	}
-	l.logger.SetPrefix("T ")
-	l.logger.Output(2, fmt.Sprint(v...))
+	l.trace.Output(l.depth, fmt.Sprint(v...))
+}
+
+// Tracef prints trace level message of the default logger with format.
+func Tracef(format string, v ...interface{}) {
+	defaultLogger.Tracef(format, v...)
 }
 
 // Tracef prints trace level message with format.
@@ -190,8 +175,12 @@ func (l *Logger) Tracef(format string, v ...interface{}) {
 	if !l.IsTraceEnabled() {
 		return
 	}
-	l.logger.SetPrefix("T ")
-	l.logger.Output(2, fmt.Sprintf(format, v...))
+	l.trace.Output(l.depth, fmt.Sprintf(format, v...))
+}
+
+// Debug prints debug level message of the default logger.
+func Debug(v ...interface{}) {
+	defaultLogger.Debug(v...)
 }
 
 // DEBUG prints debug level message.
@@ -199,8 +188,12 @@ func (l *Logger) Debug(v ...interface{}) {
 	if !l.IsDebugEnabled() {
 		return
 	}
-	l.logger.SetPrefix("D ")
-	l.logger.Output(2, fmt.Sprint(v...))
+	l.debug.Output(l.depth, fmt.Sprint(v...))
+}
+
+// Debugf prints debug level message of the default logger with format.
+func Debugf(format string, v ...interface{}) {
+	defaultLogger.Debugf(format, v...)
 }
 
 // Debugf prints debug level message with format.
@@ -208,8 +201,12 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 	if !l.IsDebugEnabled() {
 		return
 	}
-	l.logger.SetPrefix("D ")
-	l.logger.Output(2, fmt.Sprintf(format, v...))
+	l.debug.Output(l.depth, fmt.Sprintf(format, v...))
+}
+
+// Info prints info level message of the default logger.
+func Info(v ...interface{}) {
+	defaultLogger.Info(v...)
 }
 
 // INFO prints info level message.
@@ -217,8 +214,12 @@ func (l *Logger) Info(v ...interface{}) {
 	if !l.IsInfoEnabled() {
 		return
 	}
-	l.logger.SetPrefix("I ")
-	l.logger.Output(2, fmt.Sprint(v...))
+	l.info.Output(l.depth, fmt.Sprint(v...))
+}
+
+// Infof prints info level message of the default logger with format.
+func Infof(format string, v ...interface{}) {
+	defaultLogger.Infof(format, v...)
 }
 
 // Infof prints info level message with format.
@@ -226,8 +227,12 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 	if !l.IsInfoEnabled() {
 		return
 	}
-	l.logger.SetPrefix("I ")
-	l.logger.Output(2, fmt.Sprintf(format, v...))
+	l.info.Output(l.depth, fmt.Sprintf(format, v...))
+}
+
+// Warn prints warn level message of the default logger.
+func Warn(v ...interface{}) {
+	defaultLogger.Warn(v...)
 }
 
 // Warn prints warn level message.
@@ -235,8 +240,12 @@ func (l *Logger) Warn(v ...interface{}) {
 	if !l.IsWarnEnabled() {
 		return
 	}
-	l.logger.SetPrefix("D ")
-	l.logger.Output(2, fmt.Sprint(v...))
+	l.warn.Output(l.depth, fmt.Sprint(v...))
+}
+
+// Warnf prints warn level message of the default logger with format.
+func Warnf(format string, v ...interface{}) {
+	defaultLogger.Warnf(format, v...)
 }
 
 // Warnf prints warn level message with format.
@@ -244,8 +253,12 @@ func (l *Logger) Warnf(format string, v ...interface{}) {
 	if !l.IsWarnEnabled() {
 		return
 	}
-	l.logger.SetPrefix("D ")
-	l.logger.Output(2, fmt.Sprintf(format, v...))
+	l.warn.Output(l.depth, fmt.Sprintf(format, v...))
+}
+
+// Error prints error level message of the default logger.
+func Error(v ...interface{}) {
+	defaultLogger.Error(v...)
 }
 
 // ERROR prints error level message.
@@ -253,8 +266,12 @@ func (l *Logger) Error(v ...interface{}) {
 	if !l.IsErrorEnabled() {
 		return
 	}
-	l.logger.SetPrefix("E ")
-	l.logger.Output(2, fmt.Sprint(v...))
+	l.error.Output(l.depth, fmt.Sprint(v...))
+}
+
+// Errorf prints error level message of the default logger withe format.
+func Errorf(format string, v ...interface{}) {
+	defaultLogger.Errorf(format, v...)
 }
 
 // Errorf prints error level message with format.
@@ -262,6 +279,5 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 	if !l.IsErrorEnabled() {
 		return
 	}
-	l.logger.SetPrefix("E ")
-	l.logger.Output(2, fmt.Sprintf(format, v...))
+	l.error.Output(l.depth, fmt.Sprintf(format, v...))
 }
