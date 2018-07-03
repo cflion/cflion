@@ -19,6 +19,7 @@ import (
 	"flag"
 	"github.com/cflion/cflion/api"
 	"github.com/cflion/cflion/log"
+	"github.com/cflion/cflion/model"
 	"github.com/spf13/viper"
 	"net/http"
 	"os"
@@ -37,11 +38,13 @@ func init() {
 	viper.SetDefault("server.writeTimeout", 3*time.Second)
 	viper.SetDefault("server.quitTimeout", 5*time.Second)
 	viper.SetDefault("logging.level", "INFO")
+	viper.SetDefault("db.maxIdle", 20)
+	viper.SetDefault("db.maxOpen", 100)
 	viper.SetConfigFile(*confPath)
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Errorf("Fatal error config file: %s\n", err)
+		log.Errorf("Fatal error config file: %s", err)
 		os.Exit(1)
 	}
 	// init logger
@@ -54,10 +57,17 @@ func init() {
 }
 
 func main() {
+	// setup db
+	err := model.SetupDB()
+	if err != nil {
+		log.Error("Fatal error when setup db: %s", err)
+		os.Exit(1)
+	}
+	// setup api server
 	srv := api.SetupServer()
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Errorf("Fatal server listen: %s\n", err)
+			log.Errorf("Fatal server listen: %s", err)
 			os.Exit(1)
 		}
 	}()

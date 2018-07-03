@@ -16,13 +16,17 @@ package api
 
 import (
 	"fmt"
-	"github.com/cflion/cflion/log"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"os"
 )
+
+type Response struct {
+	Msg  string `json:"msg,omitempty"`
+	Data gin.H  `json:"data,omitempty"`
+}
 
 // SetupServer defines router of the server.
 func SetupServer() *http.Server {
@@ -37,9 +41,7 @@ func SetupServer() *http.Server {
 	router := gin.Default()
 	v1 := router.Group("/v1")
 	{
-		v1.GET("/apps", func(c *gin.Context) {
-			log.Info("apps")
-		})
+		v1.POST("/apps", CreateApp)
 	}
 	// setup server
 	server := &http.Server{
