@@ -22,12 +22,12 @@ type ConfigItem struct {
 	Comment string
 }
 
-
 func (configItem *ConfigItem) Create() (int64, error) {
-	stmt, err := db.Prepare("insert into config_item (file_id, name, value, comment, ctime) values (?, ?, ?, ?, now())")
+	stmt, err := db.Prepare("insert into config_item (file_id, name, value, comment, ctime, utime) values (?, ?, ?, ?, now(), now())")
 	if err != nil {
 		return -1, nil
 	}
+	defer stmt.Close()
 	res, err := stmt.Exec(configItem.FileId, configItem.Name, configItem.Value, configItem.Comment)
 	if err != nil {
 		return -1, nil
@@ -37,16 +37,4 @@ func (configItem *ConfigItem) Create() (int64, error) {
 		return -1, err
 	}
 	return id, nil
-}
-
-func (configItem *ConfigItem) Update() (int64, error) {
-	panic("implement me")
-}
-
-func (configItem *ConfigItem) Retrieve(id int64) (ConfigItem, error) {
-	panic("implement me")
-}
-
-func (configItem *ConfigItem) Delete(id int64) (ConfigItem, error) {
-	panic("implement me")
 }

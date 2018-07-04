@@ -30,7 +30,7 @@ func (app *App) String() string {
 }
 
 // ExistsApp checks whether the name of the app exists.
-func Exists(name string) bool {
+func ExistsApp(name string) bool {
 	var count int64
 	err := db.QueryRow("select count(1) from app where name = ?", name).Scan(&count)
 	if err != nil {
@@ -50,6 +50,7 @@ func (app *App) Create() (int64, error) {
 		log.Error("Prepare error when creates app: ", err)
 		return -1, err
 	}
+	defer stmt.Close()
 	res, err := stmt.Exec(app.Name, app.Outdated)
 	if err != nil {
 		log.Error("Exec error when creates app: ", err)

@@ -22,26 +22,28 @@ import (
 	"net/http"
 )
 
-func CreateApp(c *gin.Context) {
+func CreateConfigFile(c *gin.Context) {
 	var params struct {
-		Name string `json:"name" binding:"required"`
+		Content string `json:"content" binding:"required"`
+		AppId   int64  `json:"app_id" binding:"required"`
+		Name    string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindWith(&params, binding.JSON); err != nil {
 		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
 		return
 	}
-	if model.ExistsApp(params.Name) {
-		c.JSON(http.StatusUnprocessableEntity, Response{Msg: fmt.Sprintf("App [%s] already exists", params.Name)})
+	if model.ExistsConfigFile(params.AppId, params.Name) {
+		c.JSON(http.StatusUnprocessableEntity, Response{Msg: fmt.Sprintf("Config file [%s] already exists", params.Name)})
 		return
 	}
-	app := &model.App{
-		Name:     params.Name,
-		Outdated: 1,
+	configFile := &model.ConfigFile{
+		Name:  params.Name,
+		AppId: params.AppId,
 	}
-	_, err := app.Create()
+	err := configFile.CreateWithContent(params.Content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
-	} else {
-		c.JSON(http.StatusCreated, Response{Msg: fmt.Sprintf("App [%s] creates successfully", params.Name)})
+		return
 	}
+	c.JSON(http.StatusCreated, Response{Msg: fmt.Sprintf("Config file [%s] creates successfully", params.Name)})
 }
