@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
+	"strconv"
 )
 
 func CreateApp(c *gin.Context) {
@@ -44,4 +45,59 @@ func CreateApp(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusCreated, Response{Msg: fmt.Sprintf("App [%s] creates successfully", params.Name)})
 	}
+}
+
+func ViewApp(c *gin.Context) {
+	appId, err := strconv.ParseInt(c.Param("appId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	_, err = model.RetrieveApp(appId)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, Response{Msg: err.Error()})
+		return
+	}
+	appBrief, err := model.ViewApp(appId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, Response{Data: appBrief})
+}
+
+func ListApp(c *gin.Context) {
+	appsBrief, err := model.ListApp()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, Response{Data: gin.H{"apps": appsBrief}})
+}
+
+// UpdateApp updates app relationship.
+func UpdateApp(c *gin.Context) {
+	appId, err := strconv.ParseInt(c.Param("appId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	app, err := model.RetrieveApp(appId)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, Response{Msg: err.Error()})
+		return
+	}
+	var params struct {
+		FileIds []int64 `json:"fileIds" binding:"required"`
+	}
+	if err := c.ShouldBindWith(&params, binding.JSON); err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	err = app.UpdateAssociation(params.FileIds)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }

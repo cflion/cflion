@@ -42,6 +42,8 @@ func SetupServer() *http.Server {
 	v1 := router.Group("/v1")
 	{
 		v1.POST("/apps", CreateApp)
+		v1.GET("/apps/:appId", ViewApp)
+		v1.GET("/apps", ListApp)
 		v1.POST("/config-files", CreateConfigFile)
 	}
 	// setup server
