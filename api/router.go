@@ -25,7 +25,7 @@ import (
 
 type Response struct {
 	Msg  string `json:"msg,omitempty"`
-	Data gin.H  `json:"data,omitempty"`
+	Data interface{}  `json:"data,omitempty"`
 }
 
 // SetupServer defines router of the server.
@@ -45,7 +45,10 @@ func SetupServer() *http.Server {
 		v1.POST("/apps", CreateApp)
 		v1.GET("/apps/:appId", ViewApp)
 		v1.PUT("/apps/:appId", UpdateApp)
+		v1.GET("/config-files", ListConfigFile)
 		v1.POST("/config-files", CreateConfigFile)
+		v1.GET("/config-files/:fileId", ViewConfigFile)
+		v1.PUT("/config-files/:fileId", UpdateConfigFile)
 	}
 	// setup server
 	server := &http.Server{

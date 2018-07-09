@@ -72,7 +72,7 @@ func ListApp(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, Response{Data: gin.H{"apps": appsBrief}})
+	c.JSON(http.StatusOK, Response{Data: appsBrief})
 }
 
 // UpdateApp updates app relationship.

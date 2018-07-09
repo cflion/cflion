@@ -36,7 +36,7 @@ func parseContent(content string) []ConfigItem {
 			continue
 		}
 		if line[0:1] == "#" {
-			current.Comment = line[1:]
+			current.Comment = strings.TrimSpace(line[1:])
 		} else {
 			kv := strings.Split(line, "=")
 			if len(kv) != 2 {
@@ -80,9 +80,48 @@ func (configFile *ConfigFile) Create() (int64, error) {
 	return res.LastInsertId()
 }
 
+func (configFile *ConfigFile) Update(content string) error {
+    items := parseContent(content)
+    tx, err := db.Begin()
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback()
+    rows, err := tx.Query("select id, name, value, comment from config_item where file_id = ?", configFile.Id)
+    if err != nil {
+        return err
+    }
+    oldItems := make(map[string]ConfigItem, 10)
+    for rows.Next() {
+        var configItem ConfigItem
+        rows.Scan(&configItem.Id, &configItem.Name, &configItem.Value, &configItem.Comment)
+        oldItems[configItem.Name] = configItem
+    }
+    outdated := false
+    for _, item := range items {
+        oldItem, ok := oldItems[item.Name]
+        if ok {
+            if item.Value != oldItem.Value && item.Comment != oldItem.Comment {
+                tx.Exec("update config_item set value = ?, comment = ? where id = ?", item.Value, item.Comment, oldItem.Id)
+                outdated = true
+            }
+        } else {
+            tx.Exec("insert into config_item (file_id, name, value, comment, ctime, utime) values (?, ?, ?, ?, now(), now())", configFile.Id, item.Name, item.Value, item.Comment)
+        }
+    }
+    if outdated {
+        tx.Exec("update app as a set a.outdated = 1 where a.id in (select acc.app_id from association as acc where acc.file_id = ?)", configFile.Id)
+    }
+    tx.Commit()
+    return nil
+}
+
 func (configFile *ConfigFile) CreateWithContent(content string) error {
 	items := parseContent(content)
 	tx, err := db.Begin()
+	if err != nil {
+	    return err
+    }
 	defer tx.Rollback()
 	// insert config_file
 	res, err := tx.Exec("insert into config_file (name, app_id, ctime, utime) values (?, ?, now(), now())", configFile.Name, configFile.AppId)
@@ -117,4 +156,63 @@ func (configFile *ConfigFile) CreateWithContent(content string) error {
 
 	err = tx.Commit()
 	return err
+}
+
+func RetrieveConfigFile(id int64) (*ConfigFile, error) {
+	var configFile ConfigFile
+	err := db.QueryRow("select id, name, app_id from config_file where id = ?", id).Scan(&configFile.Id, &configFile.Name, &configFile.AppId)
+	if err != nil {
+		log.Errorf("Query config_file id [%s] error: %s", id, err)
+		return nil, err
+	}
+	return &configFile, nil
+}
+
+func (configFile *ConfigFile) Detail() (map[string]interface{}, error) {
+	result := make(map[string]interface{}, 5)
+	result["id"] = configFile.Id
+	result["name"] = configFile.Name
+	result["app_id"] = configFile.AppId
+	var appName string
+	db.QueryRow("select name from app where id = ?", configFile.AppId).Scan(&appName)
+	result["app_name"] = appName
+	rows, _ := db.Query("select name, value, comment from config_item where file_id = ?", configFile.Id)
+	arr := make([]string, 10)
+	for rows.Next() {
+		var name, value, comment string
+		rows.Scan(&name, &value, &comment)
+		var prefix = ""
+		if comment != "" {
+			prefix = fmt.Sprintf("# %s\n", comment)
+		}
+		arr = append(arr, fmt.Sprintf("%s%s=%s", prefix, name, value))
+	}
+	result["content"] = strings.Join(arr, "\n")
+	return result, nil
+}
+
+func ListConfigFile() ([]map[string]interface{}, error) {
+	rows, err := db.Query("select cf.id, cf.name, a.name as app_name from config_file as cf join app as a on cs.app_id = a.id")
+	if err != nil {
+		log.Error("Query all config file error: ", err)
+		return nil, err
+	}
+	result := make([]map[string]interface{}, 10)
+	for rows.Next() {
+		var id int64
+		var name string
+		var appName string
+		err = rows.Scan(&id, &name, &appName)
+		if err != nil {
+			log.Error("Scan config file error: ", err)
+			return nil, err
+		}
+		brief := map[string]interface{}{
+			"id":      id,
+			"name":    name,
+			"appName": appName,
+		}
+		result = append(result, brief)
+	}
+	return result, nil
 }

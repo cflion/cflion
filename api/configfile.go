@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
+	"strconv"
 )
 
 func CreateConfigFile(c *gin.Context) {
@@ -46,4 +47,59 @@ func CreateConfigFile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, Response{Msg: fmt.Sprintf("Config file [%s] creates successfully", params.Name)})
+}
+
+func ViewConfigFile(c *gin.Context) {
+	fileId, err := strconv.ParseInt(c.Param("fileId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	configFile, err := model.RetrieveConfigFile(fileId)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, Response{Msg: err.Error()})
+		return
+	}
+	detail, err := configFile.Detail()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, Response{Data: detail})
+
+}
+
+func ListConfigFile(c *gin.Context) {
+	configFilesBrief, err := model.ListConfigFile()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, Response{Data: configFilesBrief})
+}
+
+func UpdateConfigFile(c *gin.Context) {
+	var params struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.ShouldBindWith(&params, binding.JSON); err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	fileId, err := strconv.ParseInt(c.Param("fileId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, Response{Msg: err.Error()})
+		return
+	}
+	configFile, err := model.RetrieveConfigFile(fileId)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, Response{Msg: err.Error()})
+		return
+	}
+	err = configFile.Update(params.Content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{Msg: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, nil)
 }
