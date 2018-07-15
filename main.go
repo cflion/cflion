@@ -18,7 +18,7 @@ import (
 	"context"
 	"flag"
 	"github.com/cflion/cflion/api"
-	"github.com/cflion/cflion/log"
+	"github.com/cflion/cflion/pkg/log"
 	"github.com/cflion/cflion/model"
 	"github.com/spf13/viper"
 	"net/http"

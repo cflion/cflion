@@ -8,3 +8,5 @@ db:
   database: "cflion"
   maxIdle: 20
   maxOpen: 100
+logging:
+  level: DEBUG
