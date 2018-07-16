@@ -28,3 +28,19 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/coreos/etcd"
+  version = "v3.3.8"
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+  version = "v1.2"
+
+[[constraint]]
+  name = "github.com/go-sql-driver/mysql"
+  version = "v1.4.0"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "v1.0.2"

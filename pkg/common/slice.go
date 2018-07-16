@@ -43,19 +43,19 @@ func DistinctInt64Slice(a []int64) []int64 {
 }
 
 func DiffTwoInt64Slice(a1 []int64, a2 []int64) ([]int64, []int64) {
-    return DiffLeftInt64Slice(a1, a2), DiffLeftInt64Slice(a2, a1)
+	return DiffLeftInt64Slice(a1, a2), DiffLeftInt64Slice(a2, a1)
 }
 
 func DiffLeftInt64Slice(a1 []int64, a2 []int64) []int64 {
-    m := make(map[int64]struct{}, len(a2))
-    for _, k := range a2 {
-        m[k] = struct{}{}
-    }
-    diff := make([]int64, len(a1))
-    for _, k := range a1 {
-        if _, ok := m[k]; !ok {
-            diff = append(diff, k)
-        }
-    }
-    return diff
+	m := make(map[int64]struct{}, len(a2))
+	for _, k := range a2 {
+		m[k] = struct{}{}
+	}
+	diff := make([]int64, len(a1))
+	for _, k := range a1 {
+		if _, ok := m[k]; !ok {
+			diff = append(diff, k)
+		}
+	}
+	return diff
 }

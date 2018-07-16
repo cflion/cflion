@@ -26,6 +26,19 @@ type Repository struct {
 	DB *sql.DB
 }
 
+func (repo *Repository) UpdateConfigGroupOutdated(id int64, outdated bool) error {
+	var out = 0
+	if outdated {
+		out = 1
+	}
+	_, err := repo.DB.Exec("update config_group set outdated = ? where id = ?", out, id)
+	if err != nil {
+		log.Errorf("UpdateConfigGroupOutdated update [id=%d] [outdated=%d] error: %s", id, out, err)
+		return err
+	}
+	return nil
+}
+
 func (repo *Repository) ListConfigGroupBrief() ([]*app.ConfigGroup, error) {
 	rows, err := repo.DB.Query("select id, app, environment, outdated from config_group")
 	if err != nil {
@@ -132,6 +145,23 @@ func (repo *Repository) RetrieveConfigGroupBrief(id int64) (*app.ConfigGroup, er
 	}
 	cg.Files = cfs
 	return &cg, nil
+}
+
+func (repo *Repository) RetrieveConfigGroupDetail(id int64) (*app.ConfigGroup, error) {
+	cg, err := repo.RetrieveConfigGroupBrief(id)
+	if err != nil {
+		return nil, err
+	}
+	cfsDetail := make([]*app.ConfigFile, len(cg.Files))
+	for _, cf := range cg.Files {
+		cfDetail, err := repo.RetrieveConfigFileDetail(cf.Id)
+		if err != nil {
+			return nil, err
+		}
+		cfsDetail = append(cfsDetail, cfDetail)
+	}
+	cg.Files = cfsDetail
+	return cg, nil
 }
 
 func (repo *Repository) RetrieveConfigFileDetail(id int64) (*app.ConfigFile, error) {

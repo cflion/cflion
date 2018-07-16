@@ -129,7 +129,7 @@ func SetOutput(w io.Writer) {
 
 // IsTraceEnabled determines whether the trace level of the default logger is enabled.
 func IsTraceEnabled() bool {
-    return defaultLogger.IsTraceEnabled()
+	return defaultLogger.IsTraceEnabled()
 }
 
 // IsTraceEnabled determines whether the trace level is enabled.
@@ -139,7 +139,7 @@ func (l *Logger) IsTraceEnabled() bool {
 
 // IsTraceEnabled determines whether the debug level of the default logger is enabled.
 func IsDebugEnabled() bool {
-    return defaultLogger.IsDebugEnabled()
+	return defaultLogger.IsDebugEnabled()
 }
 
 // IsDebugEnabled determines whether the debug level is enabled.
@@ -149,7 +149,7 @@ func (l *Logger) IsDebugEnabled() bool {
 
 // IsTraceEnabled determines whether the info level of the default logger is enabled.
 func IsInfoEnabled() bool {
-    return defaultLogger.IsInfoEnabled()
+	return defaultLogger.IsInfoEnabled()
 }
 
 // IsInfoEnabled determines whether the info level is enabled.
@@ -159,7 +159,7 @@ func (l *Logger) IsInfoEnabled() bool {
 
 // IsTraceEnabled determines whether the warn level of the default logger is enabled.
 func IsWarnEnabled() bool {
-    return defaultLogger.IsWarnEnabled()
+	return defaultLogger.IsWarnEnabled()
 }
 
 // IsWarnEnabled determines whether the warn level is enabled.
@@ -169,7 +169,7 @@ func (l *Logger) IsWarnEnabled() bool {
 
 // IsTraceEnabled determines whether the error level of the default logger is enabled.
 func IsErrorEnabled() bool {
-    return defaultLogger.IsErrorEnabled()
+	return defaultLogger.IsErrorEnabled()
 }
 
 // IsErrorEnabled determines whether the error level is enabled.

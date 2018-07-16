@@ -22,18 +22,19 @@ import (
 
 type Service interface {
 	ListConfigGroup() ([]map[string]interface{}, error)
-    ExistsConfigGroupByAppAndEnvironment(appName, environment string) bool
-    ExistsConfigGroupById(id int64) bool
+	ExistsConfigGroupByAppAndEnvironment(appName, environment string) bool
+	ExistsConfigGroupById(id int64) bool
 	CreateConfigGroup(appName, environment string) (int64, error)
 	ViewConfigGroup(id int64) (map[string]interface{}, error)
 	UpdateConfigGroupAssociation(id int64, fileIds []int64) error
+	PublishConfigGroup(id int64) error
 
 	ListConfigFile() ([]map[string]interface{}, error)
-    ExistsConfigFileByNameAndNamespaceId(filename string, namespaceId int64) bool
-    ExistsConfigFileById(id int64) bool
-    CreateConfigFile(name string, namespaceId int64, content string) (int64, error)
+	ExistsConfigFileByNameAndNamespaceId(filename string, namespaceId int64) bool
+	ExistsConfigFileById(id int64) bool
+	CreateConfigFile(name string, namespaceId int64, content string) (int64, error)
 	ViewConfigFile(id int64) (map[string]interface{}, error)
-    UpdateConfigFile(id int64, content string) error
+	UpdateConfigFile(id int64, content string) error
 }
 
 // ConfigGroup defines the related structure of the config_group table in db.
@@ -73,6 +74,10 @@ func (configGroup *ConfigGroup) FullName() string {
 	return fmt.Sprintf("%s/%s", configGroup.App, configGroup.Environment)
 }
 
+func (configGroup *ConfigGroup) Key() string {
+	return fmt.Sprintf("/%s/%s", "cflion", configGroup.FullName())
+}
+
 func (configGroup *ConfigGroup) Brief() map[string]interface{} {
 	configFiles := make([]map[string]interface{}, len(configGroup.Files))
 	for _, file := range configGroup.Files {
@@ -86,6 +91,15 @@ func (configGroup *ConfigGroup) Brief() map[string]interface{} {
 		"outdated":     configGroup.Outdated,
 		"config_files": configFiles,
 	}
+}
+
+func (configGroup *ConfigGroup) ConfigFmt() string {
+	arr := make([]string, len(configGroup.Files))
+	for _, cf := range configGroup.Files {
+		s := fmt.Sprintf("[%s]\n%s\n", cf.Name, cf.ConfigFmt())
+		arr = append(arr, s)
+	}
+	return strings.Join(arr, "\n")
 }
 
 func (configFile *ConfigFile) String() string {

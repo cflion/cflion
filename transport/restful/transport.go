@@ -17,6 +17,7 @@ package restful
 
 import (
 	"context"
+	"github.com/cflion/cflion/internal/app"
 	"github.com/cflion/cflion/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -24,7 +25,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-    "github.com/cflion/cflion/internal/app"
+	"time"
 )
 
 type Server struct {
@@ -52,15 +53,15 @@ func NewServer(listenAddr string, service app.Service) *Server {
 		Addr:    listenAddr,
 		Handler: router,
 	}
-	readTimeout := viper.GetDuration("server.readTimeout")
+	readTimeout := time.Duration(viper.GetInt("server.readTimeout")) * time.Second
 	if readTimeout > 0 {
 		srv.ReadTimeout = readTimeout
 	}
-	writeTimeout := viper.GetDuration("server.writeTimeout")
+	writeTimeout := time.Duration(viper.GetInt("server.writeTimeout")) * time.Second
 	if writeTimeout > 0 {
 		srv.WriteTimeout = writeTimeout
 	}
-	idleTimeout := viper.GetDuration("server.idleTimeout")
+	idleTimeout := time.Duration(viper.GetInt("server.idleTimeout")) * time.Second
 	if idleTimeout > 0 {
 		srv.IdleTimeout = idleTimeout
 	}
@@ -96,17 +97,18 @@ func (server *Server) Stop() <-chan struct{} {
 	return ch
 }
 
-func initRouter(router *gin.Engine, service app.Service)  {
-    v1 := router.Group("/v1")
-    {
-        v1.GET("/config-groups", ListConfigGroup(service))
-        v1.POST("/config-groups", CreateConfigGroup(service))
-        v1.GET("/config-groups/:group_id", ViewConfigGroup(service))
-        v1.PUT("/config-groups/:group_id", UpdateConfigGroup(service))
+func initRouter(router *gin.Engine, service app.Service) {
+	v1 := router.Group("/v1")
+	{
+		v1.GET("/config-groups", ListConfigGroup(service))
+		v1.POST("/config-groups", CreateConfigGroup(service))
+		v1.PUT("/config-groups", PublishConfigGroup(service))
+		v1.GET("/config-groups/:group_id", ViewConfigGroup(service))
+		v1.PUT("/config-groups/:group_id", UpdateConfigGroup(service))
 
-        v1.GET("/config-files", ListConfigFile(service))
-        v1.POST("/config-files", CreateConfigFile(service))
-        v1.GET("/config-files/:file_id", ViewConfigFile(service))
-        v1.PUT("/config-files/:file_id", UpdateConfigFile(service))
-    }
+		v1.GET("/config-files", ListConfigFile(service))
+		v1.POST("/config-files", CreateConfigFile(service))
+		v1.GET("/config-files/:file_id", ViewConfigFile(service))
+		v1.PUT("/config-files/:file_id", UpdateConfigFile(service))
+	}
 }

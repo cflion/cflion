@@ -62,6 +62,28 @@ func CreateConfigGroup(service app.Service) func(*gin.Context) {
 	}
 }
 
+func PublishConfigGroup(service app.Service) func(*gin.Context) {
+	return func(ctx *gin.Context) {
+		var params struct {
+			GroupId int64 `json:"group_id" binding:"required"`
+		}
+		if err := ctx.ShouldBindWith(&params, binding.JSON); err != nil {
+			ctx.JSON(http.StatusBadRequest, ResponseRet{Msg: err.Error()})
+			return
+		}
+		if !service.ExistsConfigGroupById(params.GroupId) {
+			ctx.JSON(http.StatusUnprocessableEntity, ResponseRet{Msg: fmt.Sprintf("App [id=%d] doesn't exists", params.GroupId)})
+			return
+		}
+		err := service.PublishConfigGroup(params.GroupId)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, ResponseRet{Msg: err.Error()})
+			return
+		}
+		ctx.Status(http.StatusOK)
+	}
+}
+
 func ViewConfigGroup(service app.Service) func(*gin.Context) {
 	return func(ctx *gin.Context) {
 		groupId, err := strconv.ParseInt(ctx.Param("group_id"), 10, 64)

@@ -24,7 +24,6 @@ import (
 	"github.com/cflion/cflion/transport/restful"
 	"github.com/spf13/viper"
 	"os"
-	"time"
 )
 
 // init setting
@@ -34,12 +33,13 @@ func init() {
 	// set default config
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.port", 8080)
-	viper.SetDefault("server.readTimeout", 3*time.Second)
-	viper.SetDefault("server.writeTimeout", 3*time.Second)
-	viper.SetDefault("server.quitTimeout", 5*time.Second)
+	viper.SetDefault("server.readTimeout", 3)
+	viper.SetDefault("server.writeTimeout", 3)
+	viper.SetDefault("server.quitTimeout", 5)
 	viper.SetDefault("logging.level", "INFO")
 	viper.SetDefault("db.maxIdle", 20)
 	viper.SetDefault("db.maxOpen", 100)
+	viper.SetDefault("etcd.requestTimeout", 3)
 	viper.SetConfigFile(*confPath)
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()

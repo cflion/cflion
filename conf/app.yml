@@ -10,3 +10,8 @@ db:
   maxOpen: 100
 logging:
   level: DEBUG
+etcd:
+  formal:
+    - "127.0.0.1:2379"
+  dev:
+    - "127.0.0.1:2379"
