@@ -1,5 +1,7 @@
 CREATE DATABASE IF NOT EXISTS cflion DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+use cflion;
+
 create table config_group (
   id bigint(20) not null auto_increment,
   app varchar(45) not null comment 'app name',
