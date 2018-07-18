@@ -51,6 +51,7 @@ func (repo *Repository) ListConfigGroupBrief() ([]*app.ConfigGroup, error) {
 		rows.Scan(&cg.Id, &cg.App, &cg.Environment, &cg.Outdated)
 		cgMap[cg.Id] = &cg
 	}
+	rows.Close()
 
 	rows, err = repo.DB.Query("select group_id, file_id from association")
 	if err != nil {
@@ -66,6 +67,7 @@ func (repo *Repository) ListConfigGroupBrief() ([]*app.ConfigGroup, error) {
 		}
 		assMap[groupId] = append(assMap[groupId], fileId)
 	}
+	rows.Close()
 
 	rows, err = repo.DB.Query("select id, name, namespace_id from config_file")
 	if err != nil {
@@ -78,6 +80,7 @@ func (repo *Repository) ListConfigGroupBrief() ([]*app.ConfigGroup, error) {
 		rows.Scan(&cf.Id, &cf.Name, &cf.NamespaceId)
 		cfMap[cf.Id] = &cf
 	}
+	rows.Close()
 
 	result := make([]*app.ConfigGroup, 10)
 	for groupId, cg := range cgMap {
@@ -136,6 +139,7 @@ func (repo *Repository) RetrieveConfigGroupBrief(id int64) (*app.ConfigGroup, er
 		log.Errorf("RetrieveConfigGroupBrief config_group [id=%d] when query config_file error: %s", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 	cfs := make([]*app.ConfigFile, 8)
 	for rows.Next() {
 		var cf app.ConfigFile
@@ -177,6 +181,7 @@ func (repo *Repository) RetrieveConfigFileDetail(id int64) (*app.ConfigFile, err
 		log.Errorf("RetrieveConfigFileDetail [id=%d] query config_item error: %s", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 	cis := make([]*app.ConfigItem, 8)
 	for rows.Next() {
 		var ci app.ConfigItem
@@ -250,6 +255,7 @@ func (repo *Repository) ListConfigFileBrief() ([]*app.ConfigFile, error) {
 		log.Errorf("Query all config_file error: %s", err)
 		return nil, err
 	}
+	defer rows.Close()
 	cfs := make([]*app.ConfigFile, 8)
 	for rows.Next() {
 		var cf app.ConfigFile
