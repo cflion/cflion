@@ -19,6 +19,7 @@ import (
 	"github.com/cflion/cflion/internal/app"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/spf13/viper"
 	"net/http"
 	"strconv"
 )
@@ -210,5 +211,19 @@ func UpdateConfigFile(service app.Service) func(*gin.Context) {
 			return
 		}
 		ctx.Status(http.StatusOK)
+	}
+}
+
+func ListEtcd(service app.Service) func(*gin.Context) {
+	return func(ctx *gin.Context) {
+		var params struct {
+			Environment string `form:"environment" binding:"required"`
+		}
+		if err := ctx.ShouldBindQuery(&params); err != nil {
+			ctx.JSON(http.StatusBadRequest, ResponseRet{Msg: err.Error()})
+			return
+		}
+		endpoints := viper.GetStringSlice("etcd." + params.Environment)
+		ctx.JSON(http.StatusOK, ResponseRet{Data: gin.H{"endpoints": endpoints}})
 	}
 }

@@ -110,5 +110,7 @@ func initRouter(router *gin.Engine, service app.Service) {
 		v1.POST("/config-files", CreateConfigFile(service))
 		v1.GET("/config-files/:file_id", ViewConfigFile(service))
 		v1.PUT("/config-files/:file_id", UpdateConfigFile(service))
+
+		v1.GET("/etcds", ListEtcd(service))
 	}
 }
