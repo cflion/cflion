@@ -214,16 +214,18 @@ func UpdateConfigFile(service app.Service) func(*gin.Context) {
 	}
 }
 
-func ListEtcd(service app.Service) func(*gin.Context) {
+func QueryAppWatcher(service app.Service) func(*gin.Context) {
 	return func(ctx *gin.Context) {
 		var params struct {
-			Environment string `form:"environment" binding:"required"`
+			App string `form:"app" binding:"required"`
+			Env string `form:"env" binding:"required"`
 		}
 		if err := ctx.ShouldBindQuery(&params); err != nil {
 			ctx.JSON(http.StatusBadRequest, ResponseRet{Msg: err.Error()})
 			return
 		}
-		endpoints := viper.GetStringSlice("etcd." + params.Environment)
-		ctx.JSON(http.StatusOK, ResponseRet{Data: gin.H{"endpoints": endpoints}})
+		cg := &app.ConfigGroup{App: params.App, Environment: params.Env}
+		endpoints := viper.GetStringSlice("etcd." + params.Env)
+		ctx.JSON(http.StatusOK, ResponseRet{Data: gin.H{"key": cg.Key(), "endpoints": endpoints}})
 	}
 }
