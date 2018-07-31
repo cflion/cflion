@@ -12,15 +12,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-// Package restful defines the http server.
 package restful
 
 import (
 	"context"
-	"github.com/cflion/cflion/internal/app"
 	"github.com/cflion/cflion/pkg/log"
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"os"
@@ -28,13 +25,28 @@ import (
 	"time"
 )
 
+type ResponseRet struct {
+	Msg  string      `json:"msg,omitempty"`
+	Data interface{} `json:"data,omitempty"`
+}
+
+type ServerConfig struct {
+	ListenAddr      string
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	IdleTimeout     time.Duration
+	QuitTimeout     time.Duration
+	LoggingFilePath string
+}
+
 type Server struct {
 	srv *http.Server
+	cfg *ServerConfig
 }
 
 // NewServer creates a server.
-func NewServer(listenAddr string, service app.Service) *Server {
-	filePath := viper.GetString("logging.file")
+func NewServer(cfg *ServerConfig, register func(router *gin.Engine)) *Server {
+	filePath := cfg.LoggingFilePath
 	if len(filePath) > 0 {
 		gin.DisableConsoleColor()
 		f, _ := os.OpenFile(filePath, os.O_RDWR, 0666)
@@ -47,25 +59,21 @@ func NewServer(listenAddr string, service app.Service) *Server {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.Default()
-	initRouter(router, service)
-
+	register(router)
 	srv := &http.Server{
-		Addr:    listenAddr,
+		Addr:    cfg.ListenAddr,
 		Handler: router,
 	}
-	readTimeout := time.Duration(viper.GetInt("server.readTimeout")) * time.Second
-	if readTimeout > 0 {
-		srv.ReadTimeout = readTimeout
+	if cfg.ReadTimeout > 0 {
+		srv.ReadTimeout = cfg.ReadTimeout
 	}
-	writeTimeout := time.Duration(viper.GetInt("server.writeTimeout")) * time.Second
-	if writeTimeout > 0 {
-		srv.WriteTimeout = writeTimeout
+	if cfg.WriteTimeout > 0 {
+		srv.WriteTimeout = cfg.WriteTimeout
 	}
-	idleTimeout := time.Duration(viper.GetInt("server.idleTimeout")) * time.Second
-	if idleTimeout > 0 {
-		srv.IdleTimeout = idleTimeout
+	if cfg.IdleTimeout > 0 {
+		srv.IdleTimeout = cfg.IdleTimeout
 	}
-	return &Server{srv: srv}
+	return &Server{srv: srv, cfg: cfg}
 }
 
 // Start server.
@@ -86,7 +94,7 @@ func (server *Server) Stop() <-chan struct{} {
 		signal.Notify(quit, os.Interrupt, os.Interrupt)
 		<-quit
 		log.Info("Shutdown server ...")
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("server.quitTimeout"))
+		ctx, cancel := context.WithTimeout(context.Background(), server.cfg.QuitTimeout)
 		defer cancel()
 		if err := server.srv.Shutdown(ctx); err != nil {
 			log.Errorf("Shutdown server: %s", err)
@@ -95,22 +103,4 @@ func (server *Server) Stop() <-chan struct{} {
 		ch <- struct{}{}
 	}(ch)
 	return ch
-}
-
-func initRouter(router *gin.Engine, service app.Service) {
-	v1 := router.Group("/v1")
-	{
-		v1.GET("/config-groups", ListConfigGroup(service))
-		v1.POST("/config-groups", CreateConfigGroup(service))
-		v1.PUT("/config-groups", PublishConfigGroup(service))
-		v1.GET("/config-groups/:group_id", ViewConfigGroup(service))
-		v1.PUT("/config-groups/:group_id", UpdateConfigGroup(service))
-
-		v1.GET("/config-files", ListConfigFile(service))
-		v1.POST("/config-files", CreateConfigFile(service))
-		v1.GET("/config-files/:file_id", ViewConfigFile(service))
-		v1.PUT("/config-files/:file_id", UpdateConfigFile(service))
-
-		v1.GET("/watchers", QueryAppWatcher(service))
-	}
 }

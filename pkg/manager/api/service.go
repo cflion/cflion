@@ -12,8 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-// Package app defines the service's interface of app, config_file.
-package app
+package api
 
 import (
 	"fmt"
@@ -21,15 +20,16 @@ import (
 )
 
 type Service interface {
-	ListConfigGroup() ([]map[string]interface{}, error)
-	ExistsConfigGroupByAppAndEnvironment(appName, environment string) bool
-	ExistsConfigGroupById(id int64) bool
-	CreateConfigGroup(appName, environment string) (int64, error)
-	ViewConfigGroup(id int64) (map[string]interface{}, error)
-	UpdateConfigGroupAssociation(id int64, fileIds []int64) error
-	PublishConfigGroup(id int64) error
+	ListApps() ([]map[string]interface{}, error)
+	ExistsAppById(id int64) bool
+	ExistsAppByName(name string) bool
+	GetAppByName(name string) (*App, error)
+	CreateApp(name string) (int64, error)
+	ViewApp(id int64) (map[string]interface{}, error)
+	UpdateAppAssociation(id int64, fileIds []int64) error
+	PublishApp(id int64) error
 
-	ListConfigFile() ([]map[string]interface{}, error)
+	ListConfigFiles() ([]map[string]interface{}, error)
 	ExistsConfigFileByNameAndNamespaceId(filename string, namespaceId int64) bool
 	ExistsConfigFileById(id int64) bool
 	CreateConfigFile(name string, namespaceId int64, content string) (int64, error)
@@ -37,12 +37,10 @@ type Service interface {
 	UpdateConfigFile(id int64, content string) error
 }
 
-// ConfigGroup defines the related structure of the config_group table in db.
-type ConfigGroup struct {
-	Id          int64
-	App         string
-	Environment string
-	Outdated    byte
+type App struct {
+	Id       int64
+	Name     string
+	Outdated byte
 
 	Files []*ConfigFile
 }
@@ -53,8 +51,8 @@ type ConfigFile struct {
 	Name        string
 	NamespaceId int64
 
-	ConfigGroup *ConfigGroup
-	Items       []*ConfigItem
+	App   *App
+	Items []*ConfigItem
 }
 
 // ConfigItem defines the related structure of the config_item table in db.
@@ -66,36 +64,30 @@ type ConfigItem struct {
 	Comment string
 }
 
-func (configGroup *ConfigGroup) String() string {
-	return fmt.Sprintf("ConfigGroup {Id=%d | App=%s | Environment=%s | Outdated=%d | Files=%s}", configGroup.Id, configGroup.App, configGroup.Environment, configGroup.Outdated, configGroup.Files)
+func (app *App) String() string {
+	return fmt.Sprintf("App {Id=%d | Name=%s | Outdated=%d | Files=%s}", app.Id, app.Name, app.Outdated, app.Files)
 }
 
-func (configGroup *ConfigGroup) FullName() string {
-	return fmt.Sprintf("%s/%s", configGroup.App, configGroup.Environment)
+func (app *App) Key() string {
+	return fmt.Sprintf("/%s/%s", "cflion", app.Name)
 }
 
-func (configGroup *ConfigGroup) Key() string {
-	return fmt.Sprintf("/%s/%s", "cflion", configGroup.FullName())
-}
-
-func (configGroup *ConfigGroup) Brief() map[string]interface{} {
-	configFiles := make([]map[string]interface{}, len(configGroup.Files))
-	for _, file := range configGroup.Files {
+func (app *App) Brief() map[string]interface{} {
+	configFiles := make([]map[string]interface{}, len(app.Files))
+	for _, file := range app.Files {
 		configFiles = append(configFiles, file.Brief())
 	}
 	return map[string]interface{}{
-		"id":           configGroup.Id,
-		"app":          configGroup.App,
-		"environment":  configGroup.Environment,
-		"full_name":    configGroup.FullName(),
-		"outdated":     configGroup.Outdated,
+		"id":           app.Id,
+		"name":         app.Name,
+		"outdated":     app.Outdated,
 		"config_files": configFiles,
 	}
 }
 
-func (configGroup *ConfigGroup) ConfigFmt() string {
-	arr := make([]string, len(configGroup.Files))
-	for _, cf := range configGroup.Files {
+func (app *App) ConfigFmt() string {
+	arr := make([]string, len(app.Files))
+	for _, cf := range app.Files {
 		s := fmt.Sprintf("[%s]\n%s\n", cf.Name, cf.ConfigFmt())
 		arr = append(arr, s)
 	}
@@ -103,11 +95,11 @@ func (configGroup *ConfigGroup) ConfigFmt() string {
 }
 
 func (configFile *ConfigFile) String() string {
-	return fmt.Sprintf("ConfigFile {Id=%d | Name=%s | NamespaceId=%s | ConfigGroup=%s | Items=%s}", configFile.Id, configFile.NamespaceId, configFile.NamespaceId, configFile.ConfigGroup, configFile.Items)
+	return fmt.Sprintf("ConfigFile {Id=%d | Name=%s | NamespaceId=%d | App=%s | Items=%s}", configFile.Id, configFile.Name, configFile.NamespaceId, configFile.App, configFile.Items)
 }
 
 func (configFile *ConfigFile) Namespace() string {
-	return configFile.ConfigGroup.FullName()
+	return configFile.App.Name
 }
 
 func (configFile *ConfigFile) FullName() string {

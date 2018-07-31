@@ -1,0 +1,21 @@
+server:
+  port: 9090
+db:
+  host: "127.0.0.1"
+  port: 3306
+  username: "root"
+  password: ""
+  database: "cflion_console"
+  maxIdle: 20
+  maxOpen: 100
+logging:
+  level: DEBUG
+dev:
+  manager:
+    endpoint: http://127.0.0.1:8080
+stage:
+  manager:
+    endpoint: http:// 127.0.0.1:8080
+prod:
+  manager:
+    endpoint: http://127.0.0.1:8080

@@ -18,20 +18,29 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/spf13/viper"
 )
 
+type DBConfig struct {
+	Username string
+	Password string
+	Host     string
+	Port     int
+	Database string
+	MaxIdle  int
+	MaxOpen  int
+}
+
 // ConnectDatabase use dsn and database's configs to connect to db.
-func ConnectDatabase(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
+func ConnectDatabase(cfg *DBConfig) (*sql.DB, error) {
+	db, err := sql.Open("mysql", formatDSN(cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database))
 	if err != nil {
 		return nil, err
 	}
-	maxIdle := viper.GetInt("db.maxIdle")
+	maxIdle := cfg.MaxIdle
 	if maxIdle > 0 {
 		db.SetMaxIdleConns(maxIdle)
 	}
-	maxOpen := viper.GetInt("db.maxOpen")
+	maxOpen := cfg.MaxOpen
 	if maxOpen > 0 {
 		db.SetMaxOpenConns(maxOpen)
 	}
@@ -42,7 +51,7 @@ func ConnectDatabase(dsn string) (*sql.DB, error) {
 	return db, nil
 }
 
-// FormatDSN generates dataSourceName.
-func FormatDSN(username string, password string, host string, port int, database string) string {
+// formatDSN generates dataSourceName.
+func formatDSN(username string, password string, host string, port int, database string) string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, database)
 }
