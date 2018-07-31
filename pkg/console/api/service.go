@@ -28,9 +28,9 @@ type App struct {
 	Id       int64
 	Name     string
 	Env      string
-	Outdated byte
+	// Outdated byte
 }
 
 func (app *App) String() string {
-	return fmt.Sprintf("App {Id=%d | Name=%s | Env=%s | Outdated=%d}", app.Id, app.Name, app.Env, app.Outdated)
+	return fmt.Sprintf("App {Id=%d | Name=%s | Env=%s}", app.Id, app.Name, app.Env)
 }

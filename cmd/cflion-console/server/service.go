@@ -39,7 +39,6 @@ func (service *ServiceImpl) ListApps() ([]map[string]interface{}, error) {
 			"id":       app.Id,
 			"name":     app.Name,
 			"env":      app.Env,
-			"outdated": app.Outdated,
 		})
 	}
 	return result, nil
@@ -58,6 +57,6 @@ func (service *ServiceImpl) ExistsAppByNameAndEnv(name, env string) bool {
 }
 
 func (service *ServiceImpl) CreateApp(name, env string) (int64, error) {
-	app := &api.App{Name: name, Env: env, Outdated: 1}
+	app := &api.App{Name: name, Env: env}
 	return service.Repo.InsertApp(app)
 }

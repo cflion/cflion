@@ -25,7 +25,7 @@ type RepositoryImpl struct {
 }
 
 func (repo *RepositoryImpl) QueryAppsBrief() ([]*api.App, error) {
-	rows, err := repo.DB.Query("select id, name, env, outdated from app")
+	rows, err := repo.DB.Query("select id, name, env from app")
 	if err != nil {
 		log.Errorf("Query all apps error: %s", err)
 		return nil, err
@@ -33,7 +33,7 @@ func (repo *RepositoryImpl) QueryAppsBrief() ([]*api.App, error) {
 	apps := make([]*api.App, 8)
 	for rows.Next() {
 		var app api.App
-		rows.Scan(&app.Id, &app.Name, &app.Env, &app.Outdated)
+		rows.Scan(&app.Id, &app.Name, &app.Env)
 		apps = append(apps, &app)
 	}
 	return apps, nil
@@ -41,7 +41,7 @@ func (repo *RepositoryImpl) QueryAppsBrief() ([]*api.App, error) {
 
 func (repo *RepositoryImpl) GetAppById(id int64) (*api.App, error) {
 	var app api.App
-	err := repo.DB.QueryRow("select id, name, env, outdated from app where id = ?", id).Scan(&app.Id, &app.Name, &app.Env, &app.Outdated)
+	err := repo.DB.QueryRow("select id, name, env from app where id = ?", id).Scan(&app.Id, &app.Name, &app.Env)
 	if err != nil {
 		log.Errorf("Get app info [id=%d] error: %s", id, err)
 		return nil, err
@@ -51,7 +51,7 @@ func (repo *RepositoryImpl) GetAppById(id int64) (*api.App, error) {
 
 func (repo *RepositoryImpl) GetAppByName(name string) (*api.App, error) {
 	var app api.App
-	err := repo.DB.QueryRow("select id, name, env, outdated from app where name = ?", name).Scan(&app.Id, &app.Name, &app.Env, &app.Outdated)
+	err := repo.DB.QueryRow("select id, name, env from app where name = ?", name).Scan(&app.Id, &app.Name, &app.Env)
 	if err != nil {
 		log.Errorf("Get app info [name=%s] error: %s", name, err)
 		return nil, err
@@ -70,7 +70,7 @@ func (repo *RepositoryImpl) ExistsAppByNameAndEnv(name, env string) bool {
 }
 
 func (repo *RepositoryImpl) InsertApp(app *api.App) (int64, error) {
-	res, err := repo.DB.Exec("insert into app (name, env, outdated, ctime, utime) values (?, ?, ?, now(), now())", app.Name, app.Env, app.Outdated)
+	res, err := repo.DB.Exec("insert into app (name, env, ctime, utime) values (?, ?, ?, now(), now())", app.Name, app.Env)
 	if err != nil {
 		log.Errorf("Create app [name=%s] [env=%s] error: %s", app.Name, app.Env, err)
 		return -1, err

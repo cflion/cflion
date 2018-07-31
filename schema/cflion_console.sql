@@ -6,7 +6,7 @@ create table app (
   id bigint(20) not null auto_increment,
   name varchar(45) not null comment 'app name',
   env varchar(45) not null comment 'app env',
-  outdated tinyint(2) default 1 comment 'whether it is outdated, 1=yes, 0=no',
+#   outdated tinyint(2) default 1 comment 'whether it is outdated, 1=yes, 0=no',
   ctime datetime DEFAULT NULL,
   utime timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   primary key (id)
