@@ -70,7 +70,7 @@ func (repo *RepositoryImpl) ExistsAppByNameAndEnv(name, env string) bool {
 }
 
 func (repo *RepositoryImpl) InsertApp(app *api.App) (int64, error) {
-	res, err := repo.DB.Exec("insert into app (name, env, ctime, utime) values (?, ?, ?, now(), now())", app.Name, app.Env)
+	res, err := repo.DB.Exec("insert into app (name, env, ctime, utime) values (?, ?, now(), now())", app.Name, app.Env)
 	if err != nil {
 		log.Errorf("Create app [name=%s] [env=%s] error: %s", app.Name, app.Env, err)
 		return -1, err
