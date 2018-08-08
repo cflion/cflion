@@ -19,7 +19,7 @@ func DistinctIntSlice(a []int) []int {
 	for _, key := range a {
 		m[key] = struct{}{}
 	}
-	r := make([]int, len(m))
+	r := make([]int, 0, len(m))
 	i := 0
 	for k := range m {
 		r[i] = k
@@ -33,7 +33,7 @@ func DistinctInt64Slice(a []int64) []int64 {
 	for _, key := range a {
 		m[key] = struct{}{}
 	}
-	r := make([]int64, len(m))
+	r := make([]int64, 0, len(m))
 	i := 0
 	for k := range m {
 		r[i] = k
@@ -51,7 +51,7 @@ func DiffLeftInt64Slice(a1 []int64, a2 []int64) []int64 {
 	for _, k := range a2 {
 		m[k] = struct{}{}
 	}
-	diff := make([]int64, len(a1))
+	diff := make([]int64, 0, len(a1))
 	for _, k := range a1 {
 		if _, ok := m[k]; !ok {
 			diff = append(diff, k)

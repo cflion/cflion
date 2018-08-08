@@ -33,7 +33,7 @@ func (service *ServiceImpl) ListApps() ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := make([]map[string]interface{}, 8)
+	result := make([]map[string]interface{}, 0, 8)
 	for _, app := range apps {
 		result = append(result, map[string]interface{}{
 			"id":       app.Id,

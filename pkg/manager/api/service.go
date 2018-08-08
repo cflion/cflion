@@ -73,7 +73,7 @@ func (app *App) Key() string {
 }
 
 func (app *App) Brief() map[string]interface{} {
-	configFiles := make([]map[string]interface{}, len(app.Files))
+	configFiles := make([]map[string]interface{}, 0, len(app.Files))
 	for _, file := range app.Files {
 		configFiles = append(configFiles, file.Brief())
 	}
@@ -86,7 +86,7 @@ func (app *App) Brief() map[string]interface{} {
 }
 
 func (app *App) ConfigFmt() string {
-	arr := make([]string, len(app.Files))
+	arr := make([]string, 0, len(app.Files))
 	for _, cf := range app.Files {
 		s := fmt.Sprintf("[%s]\n%s\n", cf.Name, cf.ConfigFmt())
 		arr = append(arr, s)
@@ -107,7 +107,7 @@ func (configFile *ConfigFile) FullName() string {
 }
 
 func (configFile *ConfigFile) ConfigFmt() string {
-	arr := make([]string, len(configFile.Items))
+	arr := make([]string, 0, len(configFile.Items))
 	for _, item := range configFile.Items {
 		arr = append(arr, item.ConfigFmt())
 	}

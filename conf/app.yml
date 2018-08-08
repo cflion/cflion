@@ -1,0 +1,16 @@
+server:
+  port: 8080
+db:
+  host: "127.0.0.1"
+  port: 3306
+  username: "root"
+  password: ""
+  database: "cflion_manager"
+  maxIdle: 20
+  maxOpen: 100
+logging:
+  level: DEBUG
+etcd:
+  endpoints:
+    - "127.0.0.1:2379"
+

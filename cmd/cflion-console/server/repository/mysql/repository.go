@@ -30,7 +30,7 @@ func (repo *RepositoryImpl) QueryAppsBrief() ([]*api.App, error) {
 		log.Errorf("Query all apps error: %s", err)
 		return nil, err
 	}
-	apps := make([]*api.App, 8)
+	apps := make([]*api.App, 0, 8)
 	for rows.Next() {
 		var app api.App
 		rows.Scan(&app.Id, &app.Name, &app.Env)

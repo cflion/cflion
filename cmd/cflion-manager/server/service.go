@@ -82,7 +82,7 @@ func (service *ServiceImpl) UpdateAppAssociation(id int64, fileIds []int64) erro
 	if err != nil {
 		return err
 	}
-	curFileIds := make([]int64, len(cg.Files))
+	curFileIds := make([]int64, 0, len(cg.Files))
 	for _, cf := range cg.Files {
 		curFileIds = append(curFileIds, cf.Id)
 	}
@@ -122,7 +122,7 @@ func (service *ServiceImpl) ListConfigFiles() ([]map[string]interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	result := make([]map[string]interface{}, len(cfs))
+	result := make([]map[string]interface{}, 0, len(cfs))
 	for _, cf := range cfs {
 		result = append(result, cf.Brief())
 	}
@@ -159,7 +159,7 @@ func (service *ServiceImpl) UpdateConfigFile(id int64, content string) error {
 func parseContent(content string) []*api.ConfigItem {
 	lines := strings.Split(content, "\n")
 	current := &api.ConfigItem{}
-	items := make([]*api.ConfigItem, len(lines))
+	items := make([]*api.ConfigItem, 0, len(lines))
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if len(line) == 0 {
@@ -175,7 +175,7 @@ func parseContent(content string) []*api.ConfigItem {
 			}
 			current.Name, current.Value = kv[0], kv[1]
 			items = append(items, current)
-			current = &api.ConfigItem{}
+            current = &api.ConfigItem{}
 		}
 	}
 	return items

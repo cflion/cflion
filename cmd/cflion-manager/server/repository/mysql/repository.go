@@ -78,7 +78,7 @@ func (repo *RepositoryImpl) RetrieveAppBrief(id int64) (*api.App, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	cfs := make([]*api.ConfigFile, 8)
+	cfs := make([]*api.ConfigFile, 0, 8)
 	for rows.Next() {
 		var cf api.ConfigFile
 		cf.App = &api.App{}
@@ -94,7 +94,7 @@ func (repo *RepositoryImpl) RetrieveAppDetail(id int64) (*api.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfsDetail := make([]*api.ConfigFile, len(app.Files))
+	cfsDetail := make([]*api.ConfigFile, 0, len(app.Files))
 	for _, cf := range app.Files {
 		cfDetail, err := repo.RetrieveConfigFileDetail(cf.Id)
 		if err != nil {
@@ -135,7 +135,7 @@ func (repo *RepositoryImpl) UpdateAppOutdated(id int64, outdated bool) error {
 	if outdated {
 		out = 1
 	}
-	_, err := repo.DB.Exec("update config_group set outdated = ? where id = ?", out, id)
+	_, err := repo.DB.Exec("update app set outdated = ? where id = ?", out, id)
 	if err != nil {
 		log.Errorf("UpdateAppOutdated update [id=%d] [outdated=%d] error: %s", id, out, err)
 		return err
@@ -150,7 +150,7 @@ func (repo *RepositoryImpl) ListConfigFilesBrief() ([]*api.ConfigFile, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	cfs := make([]*api.ConfigFile, 8)
+	cfs := make([]*api.ConfigFile, 0, 8)
 	for rows.Next() {
 		var cf api.ConfigFile
 		cf.App = &api.App{}
@@ -203,13 +203,14 @@ func (repo *RepositoryImpl) InsertConfigFileWithItems(cf *api.ConfigFile) (int64
 		return -1, err
 	}
 	// insert config_item
-	patterns := make([]string, len(cf.Items))
-	params := make([]interface{}, len(cf.Items))
+	patterns := make([]string, 0, len(cf.Items))
+	params := make([]interface{}, 0, len(cf.Items))
 	for _, item := range cf.Items {
 		patterns = append(patterns, "(?, ?, ?, ?, now(), now())")
 		params = append(params, fileId, item.Name, item.Value, item.Comment)
 	}
 	query := fmt.Sprintf("insert into config_item (file_id, name, value, comment, ctime, utime) values %s", strings.Join(patterns, ","))
+	log.Info("query=", query)
 	_, err = tx.Exec(query, params...)
 	if err != nil {
 		log.Error("Insert batch config_item %s error: %s", cf.Items, err)
@@ -233,7 +234,7 @@ func (repo *RepositoryImpl) RetrieveConfigFileDetail(id int64) (*api.ConfigFile,
 		return nil, err
 	}
 	defer rows.Close()
-	cis := make([]*api.ConfigItem, 8)
+	cis := make([]*api.ConfigItem, 0, 8)
 	for rows.Next() {
 		var ci api.ConfigItem
 		rows.Scan(&ci.Id, &ci.FileId, &ci.Name, &ci.Value, &ci.Comment)
@@ -280,8 +281,8 @@ func (repo *RepositoryImpl) UpdateConfigFile(fileId int64, items []*api.ConfigIt
 }
 
 func insertAppBatchAssociation(tx *sql.Tx, appId int64, fileIds []int64) error {
-	patterns := make([]string, len(fileIds))
-	params := make([]interface{}, len(fileIds))
+	patterns := make([]string, 0, len(fileIds))
+	params := make([]interface{}, 0, len(fileIds))
 	for _, fileId := range fileIds {
 		patterns = append(patterns, "(?, ?, now(), now())")
 		params = append(params, appId, fileId)
@@ -296,8 +297,8 @@ func insertAppBatchAssociation(tx *sql.Tx, appId int64, fileIds []int64) error {
 }
 
 func deleteAppBatchAssociation(tx *sql.Tx, appId int64, fileIds []int64) error {
-	patterns := make([]string, len(fileIds))
-	params := make([]interface{}, len(fileIds)+1)
+	patterns := make([]string, 0, len(fileIds))
+	params := make([]interface{}, 0, len(fileIds)+1)
 	params = append(params, appId)
 	for _, fileId := range fileIds {
 		patterns = append(patterns, "?")
