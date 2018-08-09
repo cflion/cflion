@@ -18,15 +18,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/cflion/cflion/cmd/cflion-manager/server"
+	"github.com/cflion/cflion/cmd/cflion-manager/server/repository/mysql"
 	"github.com/cflion/cflion/pkg/database"
 	"github.com/cflion/cflion/pkg/log"
+	"github.com/cflion/cflion/pkg/manager/api"
 	"github.com/cflion/cflion/pkg/transport/restful"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"os"
 	"time"
-    "github.com/cflion/cflion/cmd/cflion-manager/server/repository/mysql"
-    "github.com/cflion/cflion/pkg/manager/api"
 )
 
 // init setting

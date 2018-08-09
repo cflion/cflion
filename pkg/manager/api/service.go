@@ -118,6 +118,7 @@ func (configFile *ConfigFile) Brief() map[string]interface{} {
 	return map[string]interface{}{
 		"id":        configFile.Id,
 		"name":      configFile.Name,
+		"namespace_id": configFile.NamespaceId,
 		"namespace": configFile.Namespace(),
 		"full_name": configFile.FullName(),
 	}

@@ -175,7 +175,7 @@ func parseContent(content string) []*api.ConfigItem {
 			}
 			current.Name, current.Value = kv[0], kv[1]
 			items = append(items, current)
-            current = &api.ConfigItem{}
+			current = &api.ConfigItem{}
 		}
 	}
 	return items

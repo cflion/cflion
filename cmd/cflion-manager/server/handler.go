@@ -202,11 +202,7 @@ func QueryWatcher(service api.Service) func(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: err.Error()})
 			return
 		}
-		app, err := service.GetAppByName(params.App)
-		if err != nil {
-		    ctx.JSON(http.StatusInternalServerError, restful.ResponseRet{Msg:err.Error()})
-		    return
-        }
+		app := &api.App{Name: params.App}
 		endpoints := viper.GetStringSlice("etcd.endpoints")
 		ctx.JSON(http.StatusOK, restful.ResponseRet{Data: gin.H{"key": app.Key(), "endpoints": endpoints}})
 

@@ -254,11 +254,17 @@ func ViewConfigFile(service api.Service) func(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: err.Error()})
 			return
 		}
-		env := ctx.Query("env")
-		managerUrl := getManagerEndpoint(env)
-		if len(managerUrl) <= 0 {
-			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: fmt.Sprintf("Can not support [env=%s]", env)})
+		namespaceId, err := strconv.ParseInt(ctx.Query("namespace_id"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: err.Error()})
+			return
 		}
+		app, err := service.GetAppById(namespaceId)
+		if err != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, restful.ResponseRet{Msg: err.Error()})
+			return
+		}
+		managerUrl := getManagerEndpoint(app.Env)
 		// call remote manager
 		resp, err := http.Get(fmt.Sprintf("%s/v1/config-files/%d", managerUrl, fileId))
 		if err != nil {
@@ -285,17 +291,19 @@ func UpdateConfigFile(service api.Service) func(ctx *gin.Context) {
 			return
 		}
 		var params struct {
-			Config string `json:"config" binding:"required"`
+			NamespaceId int64  `json:"namespace_id" binding:"required"`
+			Config      string `json:"config" binding:"required"`
 		}
 		if err := ctx.ShouldBindWith(&params, binding.JSON); err != nil {
 			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: err.Error()})
 			return
 		}
-		env := ctx.Query("env")
-		managerUrl := getManagerEndpoint(env)
-		if len(managerUrl) <= 0 {
-			ctx.JSON(http.StatusBadRequest, restful.ResponseRet{Msg: fmt.Sprintf("Can not support [env=%s]", env)})
+		app, err := service.GetAppById(params.NamespaceId)
+		if err != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, restful.ResponseRet{Msg: err.Error()})
+			return
 		}
+		managerUrl := getManagerEndpoint(app.Env)
 		// call remote manager
 		reqBytes, _ := json.Marshal(params)
 		client := http.Client{}
